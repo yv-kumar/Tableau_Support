@@ -75,7 +75,7 @@ try
 {
 write-log ("INFO: Restarting service *$servicename* on computer *$machinename* post password update")
 $restartservice = Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
-Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
+#Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 }
 catch { write-log ("ERROR: There is an error while restarting service *$servicename* on computer *$computername* with error :_" + $_.Exception.Message)  }
 } # If block end
