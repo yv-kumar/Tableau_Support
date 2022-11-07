@@ -52,7 +52,7 @@ catch { write-log ("ERROR: There is an error while checking machine *$machinenam
 if (-not ([string]::IsNullOrEmpty($getservice )))
 {
 
-write-log ("INFO: Found services on Machine *$machiename* that are running services with ID *$svcid*")
+write-log ("INFO: Found services on Machine *$machinename* that are running services with ID *$svcid*")
 ##Parsing output of each service that has same run as ID
 foreach ($service in $getservice )
 {
@@ -74,6 +74,7 @@ write-log ("INFO: Successfully updated password for logon ID *$svcid* on machine
 try
 {
 write-log ("INFO: Restarting service *$servicename* on computer *$machinename* post password update")
+$restartservice = Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 }
 catch { write-log ("ERROR: There is an error while restarting service *$servicename* on computer *$computername* with error :_" + $_.Exception.Message)  }
@@ -100,7 +101,7 @@ $servicename = $service.Name
 $response = Get-Service -ComputerName $machinename -Name $servicename
 $currentstatus = $response.Status
 
-if ($currentstate -eq "Running"){ write-log ("INFO: Final Status of service *$servicename* on computer *$computername* is *$currentstatus*") }
+if ($currentstatus -eq "Running"){ write-log ("INFO: Final Status of service *$servicename* on computer *$computername* is *$currentstatus*") }
 else { write-log ("ERROR: Attention Required! - Final Status of service *$servicename* on computer *$computername* is *$currentstatus*") }
 
 }
