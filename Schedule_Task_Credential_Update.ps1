@@ -6,7 +6,7 @@
 #####################################################################################
 
 ## Declaring Parameters
-$taskpath = "\BOBJ Active Tasks\"
+$taskpath = "\Task Path\"
 $logfilename = "Update_ScheduledTask_Runas_Pwd" + "_" + (Get-Date -Format "yyyyMMdd") + ".log"
 $logs = $PSScriptRoot + "\" + $logfilename
 $serverlist = $PSScriptRoot + "\" + "serverlist.csv"
@@ -45,7 +45,7 @@ $machinename = $server.servername
 ##Querying tasks that are running with certain run as ID
 try
 {
-$tasks = Get-ScheduledTask -CimSession $machinename -TaskPath $taskpath | Where-Object { $_.Principal.UserId -eq $svcid }
+$tasks = Get-ScheduledTask -CimSession $machinename -TaskPath $taskpath | Where-Object { $_.Principal.UserId -eq $svcuser }
 write-log ("INFO: Queried computer *$machinename* for task scheduler jobs running with Run as ID *$svcid*")
 }
 catch { write-log ("ERROR: There is an error while querying machine *$machinename* for scheduled tasks running with run as ID *$svcid* with error :_" + $_.Exception.Message)  }
@@ -59,12 +59,13 @@ foreach ($task in $tasks)
 
 $taskname = $task.TaskName
 
-write-log ("INFO: Started to work on Task *$taskname*")
+write-log ("INFO: Started to work on Task *$taskname* on server *$machinename*")
 
 ##Disabling scheduled task
 try
 {
-Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Disable-ScheduledTask
+#Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Disable-ScheduledTask
+$disabletask = Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Disable-ScheduledTask
 write-log ("INFO: Disabled scheduled task *$taskname*")
 }
 catch { write-log ("ERROR: Error while disabling scheduled task *$taskname* with error:- " + $_.Exception.Message) }
@@ -72,8 +73,8 @@ catch { write-log ("ERROR: Error while disabling scheduled task *$taskname* with
 ##Updating cred
 try
 {
-Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Set-ScheduledTask -CimSession $machinename -User $svcid -Password $svcpwd
-write-log ("INFO: Password reset has been done for scheduled task *$taskname*")
+Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Set-ScheduledTask -CimSession $machinename -User $svcuser -Password $svcpwd
+write-log ("INFO: Password update has been done for scheduled task *$taskname*")
 }
 catch { write-log ("ERROR: There is an error while updating password for *$svcid* on scheduled task *$taskname* with error :-" + $_.Exception.Message)}
 
@@ -82,7 +83,8 @@ catch { write-log ("ERROR: There is an error while updating password for *$svcid
 try
 {
 write-log ("INFO: Enabling scheduled task *$taskname*")
-Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Enable-ScheduledTask
+#Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Enable-ScheduledTask
+$enabletask = Get-ScheduledTask -CimSession $machinename -TaskName $taskname | Enable-ScheduledTask
 }
 catch { write-log ("ERROR: Error while enabling scheduled task *$taskname* with error:- " + $_.Exception.Message) }
 
@@ -102,8 +104,8 @@ write-log ("INFO: No Scheduled tasks on Machine *$machinename* running with run/
 
 try
 {
-$tasks = Get-ScheduledTask -CimSession $machinename -TaskPath $taskpath | Where-Object { $_.Principal.UserId -eq $svcid }
-write-log ("INFO: Queried computer *$machinename* for task scheduler jobs running with Run as ID *$svcid*")
+$tasks = Get-ScheduledTask -CimSession $machinename -TaskPath $taskpath | Where-Object { $_.Principal.UserId -eq $svcuser }
+write-log ("INFO: Queried computer *$machinename* for task scheduler jobs running with Run as ID *$svcuser*")
 }
 catch { write-log ("ERROR: There is an error while querying machine *$machinename* for scheduled tasks running with run as ID *$svcid* with error :_" + $_.Exception.Message)  }
 
@@ -111,7 +113,8 @@ foreach ($task in $tasks)
 {
 $taskname = $task.TaskName
 
-$status = Get-ScheduledTask -CimSession $machinename -TaskName $taskname
+$getstatus = Get-ScheduledTask -CimSession $machinename -TaskName $taskname
+$status = $getstatus.State
 
 write-log ("INFO: Final status of the scheduled task *$taskname* is *$status* on Machine *$machinename*")
 
