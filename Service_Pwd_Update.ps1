@@ -63,6 +63,7 @@ $servicename = $service.Name
 ##Block to update run user credential for a specific service
 try
 {
+$stopservice = Get-Service -ComputerName $machinename -Name $servicename | Stop-Service
 $loadservice = Get-WmiObject -Class Win32_Service -ComputerName $machinename -Filter "Name = '$servicename'"
 $servicereset = $loadservice.change($null,$null,$null,$null,$null,$null,"$svcuser","$svcpwd")
 
@@ -73,8 +74,8 @@ write-log ("INFO: Successfully updated password for logon ID *$svcid* on machine
 ##Attempting to restart services post pwd reset
 try
 {
-write-log ("INFO: Restarting service *$servicename* on computer *$machinename* post password update")
-$restartservice = Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
+write-log ("INFO: Starting service *$servicename* on computer *$machinename* post password update")
+$startservice = Get-Service -ComputerName $machinename -Name $servicename | Start-Service
 #Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 }
 catch { write-log ("ERROR: There is an error while restarting service *$servicename* on computer *$computername* with error :_" + $_.Exception.Message)  }

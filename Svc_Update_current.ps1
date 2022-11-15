@@ -7,7 +7,7 @@
 
 ## Declaring Parameters
 $logfilename = "Update_Services_Runas_Pwd" + "_" + (Get-Date -Format "yyyyMMdd") + ".log"
-$logs = $PSScriptRoot + "\" + $logfilename
+$logs = $PSScriptRoot + "\" + $logfilename # Setting the location of logfile with name
 
 ## Function to write logs to a file
 function write-log ([string]$logtext)
@@ -33,7 +33,7 @@ write-log ("INFO: Username for this password update script is *$svcuser*")
 catch { write-log ("ERROR: There was an error while creating credential object for ID *$svcuser* error is :-" + $_.Exception.Message)  }
 
 
-$machinename = hostname
+$machinename = hostname # To pull current server name as parameter
 
 
 ### Querying local computer for list of services that are running with required run as user
