@@ -34,8 +34,9 @@ write-log ("INFO: Working on to restart service *$servicename* on computer *$mac
 $restartservice = Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 Start-Sleep -Seconds 10
 
-$finalstatus = Get-Service -ComputerName $machinename -Name $servicename
+$finalstate = Get-Service -ComputerName $machinename -Name $servicename
 
+$finalstatus = $finalstate.Status
 write-log ("INFO: Final status of the service *$servicename* on server *$machinename* is *$finalstatus*")
 }
 
