@@ -1,13 +1,12 @@
 ﻿######################################################################################
-# PowerShell script to update Password for an ID in Windows services & Scheduled tasks
+# PowerShell script restart windows services
 # Written by Name on date
 # Modified on Date by name
 #
 #####################################################################################
 
 ## Declaring Parameters
-$svcid = ""
-$logfilename = "Update_Services_Runas_Pwd" + "_" + (Get-Date -Format "yyyyMMdd") + ".log"
+$logfilename = "Restart_Windows_Services" + "_" + (Get-Date -Format "yyyyMMdd") + ".log"
 $logs = $PSScriptRoot + "\" + $logfilename
 $serverlist = $PSScriptRoot + "\" + "serverlist.csv"
 
@@ -19,7 +18,7 @@ function write-log ([string]$logtext)
 
 }
 
-write-log ("*************************** Start of services run as user password reset block ***************************************")
+write-log ("*************************** Start of the scriptk ***************************************")
 
 
 
@@ -29,83 +28,16 @@ foreach ($server in $servers)
 {
 
 $machinename = $server.servername
+$servicename = $server.servicename
 
-
-### Querying local computer for list of services that are running with required run as user
-try
-{
-write-log ("INFO: Checking for services running with Run as ID *$svcid* on computer *$machinename*")
-$getservice = Get-WmiObject -Class Win32_Service -ComputerName $machinename -Filter "StartName like '%$svcid%'"
-}
-catch { write-log ("ERROR: There is an error while checking machine *$machinename* for services running with run as ID *$svcid* with error :_" + $_.Exception.Message)  }
-
-if (-not ([string]::IsNullOrEmpty($getservice )))
-{
-
-write-log ("INFO: Found services on Machine *$machinename* that are running services with ID *$svcid*")
-##Parsing output of each service that has same run as ID
-foreach ($service in $getservice )
-{
-##adding servicename to Parameter
-$servicename = $service.Name
-
-
-##Block to update run user credential for a specific service
-try
-{
-$stopservice = Get-Service -ComputerName $machinename -Name $servicename | Stop-Service
-$loadservice = Get-WmiObject -Class Win32_Service -ComputerName $machinename -Filter "Name = '$servicename'"
-$servicereset = $loadservice.change($null,$null,$null,$null,$null,$null,"$svcuser","$svcpwd")
-
-if ($servicereset.ReturnValue -eq 0) # If block start
-{ 
-
-write-log ("INFO: Successfully updated password for logon ID *$svcid* on machine *$machinename* for service *$servicename*") 
-##Attempting to restart services post pwd reset
-try
-{
-write-log ("INFO: Starting service *$servicename* on computer *$machinename* post password update")
-$startservice = Get-Service -ComputerName $machinename -Name $servicename | Start-Service
-#Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
-}
-catch { write-log ("ERROR: There is an error while restarting service *$servicename* on computer *$computername* with error :_" + $_.Exception.Message)  }
-} # If block end
-
-
-}
-catch { write-log ("ERROR: There is an error while updating run as user *$svcuser* credential for service *$servicename* on computer *$machinename* with error :-" + $_.Exception.Message )  }
-
-
-}
-
-##cooling period before we check final status of services
+write-log ("INFO: Working on to restart service *$servicename* on computer *$machinename*")
+$restartservice = Get-Service -ComputerName $machinename -Name $servicename | Restart-Service
 Start-Sleep -Seconds 10
 
-##Check final status of services after password reset
-$getservice = Get-WmiObject -Class Win32_Service -ComputerName $machinename -Filter "StartName like '%$svcid%'"
+$finalstatus = Get-Service -ComputerName $machinename -Name $servicename
 
-
-foreach ($service in $getservice)
-{
-
-$servicename = $service.Name
-$response = Get-Service -ComputerName $machinename -Name $servicename
-$currentstatus = $response.Status
-
-if ($currentstatus -eq "Running"){ write-log ("INFO: Final Status of service *$servicename* on computer *$computername* is *$currentstatus*") }
-else { write-log ("ERROR: Attention Required! - Final Status of service *$servicename* on computer *$computername* is *$currentstatus*") }
-
+write-log ("INFO: Final status of the service *$servicename* on server *$machinename* is *$finalstatus*")
 }
 
-}
-
-else
-{
- write-log ("INFO: No services found on Machine *$machinename* running with run/logon as ID *$svcid*")
-
-}
-
-}
-
-write-log ("*************************** End of services run as user password reset block ***************************************")
+write-log ("*************************** End of the script ***************************************")
 
